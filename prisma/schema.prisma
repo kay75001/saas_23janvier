@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  FORMATEUR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nom       String
+  prenom    String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  formateur     Formateur?
+  etudiant      Etudiant?
+  notifications Notifications[]
+}
+
+model Formateur {
+  id_formateur   String    @id @default(cuid())
+  userId         String    @unique
+  telephone      String
+  prochain_cours String?
+  status_actuel  String
+  fin_cours      DateTime?
+  id_programme   String?
+
+  // Relations
+  user          User            @relation(fields: [userId], references: [id])
+  Avoir         Avoir[]
+  Disposer      Disposer[]
+  Donner        Donner[]
+  Programme     Programme?      @relation(fields: [id_programme], references: [id_programme])
+  Notifications Notifications[]
+  Programmer    Programmer[]
+}
+
+model Etudiant {
+  id_etudiant  String  @id @default(cuid())
+  userId       String  @unique
+  telephone    String
+  id_exclusion String?
+  id_programme String?
+  id_classe    String?
+
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  Apprendre       Apprendre[]
+  Avoir           Avoir[]
+  Consulter       Consulter[]
+  DetailsEtudiant DetailsEtudiant[]
+  Classe          Classe?            @relation(fields: [id_classe], references: [id_classe])
+  Exclus          Exclus?           @relation(fields: [id_exclusion], references: [id_exclusion])
+  Programme       Programme?         @relation(fields: [id_programme], references: [id_programme])
+  Notifications   Notifications[]
+}
+
+model Notifications {
+  id               String   @id @default(cuid())
+  message          String
+  type             String
+  dateNotification DateTime
+  userId           String
+  id_etudiant      String?
+  id_formateur     String?
+
+  // Relations
+  Etudiant  Etudiant?  @relation(fields: [id_etudiant], references: [id_etudiant])
+  Formateur Formateur? @relation(fields: [id_formateur], references: [id_formateur])
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model Ressources {
+  id_ressources String      @id @default(cuid())
+  type          String
+  url           String
+  date_ajout    DateTime
+  Consulter     Consulter[]
+  Disposer      Disposer[]
+}
+
+model Horaires {
+  id_horaire  String       @id @default(cuid())
+  jour        DateTime
+  heure_debut DateTime
+  heure_fin   DateTime
+  Classe      Classe[]
+  Programmer  Programmer[]
+}
+
+model DetailsClasse {
+  id_details_classe     String   @id @default(cuid())
+  liste_jours_cours     String
+  supports_pedagogiques String
+  etat_actuel           String
+  Lister                Lister[]
+}
+
+model CategorieCours {
+  id_categorie String     @id @default(cuid())
+  nom          String
+  description  String
+  Repartir     Repartir[]
+}
+
+model Cours {
+  id_cours        String      @id @default(cuid())
+  titre           String
+  description     String
+  categorie       String
+  fichierAssocies String
+  date_creation   DateTime
+  horaires        DateTime
+  Apprendre       Apprendre[]
+  Donner          Donner[]
+  Repartir        Repartir[]
+}
+
+model Exclus {
+  id_exclusion   String     @id @default(cuid())
+  motif          String
+  description    String
+  date_exclusion DateTime
+  Etudiant       Etudiant[]
+}
+
+model Programme {
+  id_programme String      @id @default(cuid())
+  description  String
+  duree        DateTime
+  debut        DateTime
+  fin          String
+  vacances     DateTime
+  Etudiant     Etudiant[]
+  Formateur    Formateur[]
+}
+
+model Classe {
+  id_classe   String     @id @default(cuid())
+  nom         String
+  description String
+  id_horaire  String
+  Horaires    Horaires   @relation(fields: [id_horaire], references: [id_horaire])
+  Etudiant    Etudiant[]
+  Lister      Lister[]
+}
+
+model DetailsEtudiant {
+  id                 String   @id @default(cuid())
+  progres            String
+  note               String
+  commentaires       String
+  derniere_connexion DateTime
+  id_etudiant        String
+  Etudiant           Etudiant @relation(fields: [id_etudiant], references: [id_etudiant])
+}
+
+model Avoir {
+  id_formateur String
+  id_etudiant  String
+  Etudiant     Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant])
+  Formateur    Formateur @relation(fields: [id_formateur], references: [id_formateur])
+
+  @@id([id_formateur, id_etudiant])
+}
+
+model Lister {
+  id_classe         String
+  id_details_classe String
+  Classe            Classe        @relation(fields: [id_classe], references: [id_classe])
+  DetailsClasse     DetailsClasse @relation(fields: [id_details_classe], references: [id_details_classe])
+
+  @@id([id_classe, id_details_classe])
+}
+
+model Programmer {
+  id_formateur String
+  horaires_id  String
+  Horaires     Horaires  @relation(fields: [horaires_id], references: [id_horaire])
+  Formateur    Formateur @relation(fields: [id_formateur], references: [id_formateur])
+
+  @@id([id_formateur, horaires_id])
+}
+
+model Disposer {
+  id_formateur  String
+  id_ressources String
+  Formateur     Formateur  @relation(fields: [id_formateur], references: [id_formateur])
+  Ressources    Ressources @relation(fields: [id_ressources], references: [id_ressources])
+
+  @@id([id_formateur, id_ressources])
+}
+
+model Consulter {
+  id_etudiant   String
+  id_ressources String
+  Etudiant      Etudiant   @relation(fields: [id_etudiant], references: [id_etudiant])
+  Ressources    Ressources @relation(fields: [id_ressources], references: [id_ressources])
+
+  @@id([id_etudiant, id_ressources])
+}
+
+model Donner {
+  id_formateur String
+  id_cours     String
+  Cours        Cours     @relation(fields: [id_cours], references: [id_cours])
+  Formateur    Formateur @relation(fields: [id_formateur], references: [id_formateur])
+
+  @@id([id_formateur, id_cours])
+}
+
+model Apprendre {
+  id_etudiant String
+  id_cours    String
+  Cours       Cours    @relation(fields: [id_cours], references: [id_cours])
+  Etudiant    Etudiant @relation(fields: [id_etudiant], references: [id_etudiant])
+
+  @@id([id_etudiant, id_cours])
+}
+
+model Repartir {
+  id_categorie   String
+  id_cours       String
+  CategorieCours CategorieCours @relation(fields: [id_categorie], references: [id_categorie])
+  Cours          Cours          @relation(fields: [id_cours], references: [id_cours])
+
+  @@id([id_categorie, id_cours])
+}
