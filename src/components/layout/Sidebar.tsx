@@ -26,6 +26,7 @@ export default function Sidebar() {
     { label: "Paramètres", href: "/student/settings" },
   ];
 
+  // If user is formateur => show formateurLinks, else studentLinks
   const links =
     session?.user?.role === "FORMATEUR" ? formateurLinks : etudiantLinks;
 

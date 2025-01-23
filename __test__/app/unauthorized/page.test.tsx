@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import UnauthorizedPage from "@/app/unauthorized/page";
+import { getByRole, getByText } from "@testing-library/dom";
+import '@testing-library/jest-dom';
+import UnauthorizedPage from "../../../src/app/unauthorized/page";
 import { useRouter } from "next/navigation";
+import * as jest from "jest";
+import { describe, it } from "node:test";
+import React from "react";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
